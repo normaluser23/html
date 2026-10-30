@@ -1,0 +1,33 @@
+$ node eventloop.js
+1. Start of script (synchronous)
+2. End of script (synchronous)
+3. process.nextTick callback (runs before other microtasks)
+4. Promise.then callback (microtask)
+5. setTimeout callback (macrotask, runs after delay)
+6. setImmediate callback (runs in the check phase)
+
+
+$ node server.js
+Server listening on http://localhost:5000
+
+$ curl http://localhost:5000/
+Node core HTTP server is running. Try /projects or /system-info
+
+$ curl http://localhost:5000/projects
+[
+  { "id": 1, "title": "Library Management System" },
+  { "id": 2, "title": "Weather App" },
+  { "id": 3, "title": "Result Portal" }
+]
+
+$ curl http://localhost:5000/system-info
+{
+  "platform": "linux",
+  "cpus": 1,
+  "totalMemoryMB": 3998,
+  "freeMemoryMB": 3714,
+  "uptimeSeconds": 207
+}
+
+$ curl http://localhost:5000/unknown
+404 - Route not found

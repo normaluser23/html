@@ -1,0 +1,184 @@
+
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+let projects = [
+  { id: 1, title: "Library Management System", stack: "Java, MySQL" },
+  { id: 2, title: "Weather App", stack: "HTML, CSS, JS, Fetch API" },
+  { id: 3, title: "Result Portal", stack: "PHP, MySQL" },
+];
+
+let messages = [];
+let nextProjectId = 4;
+let nextMessageId = 1;
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
+app.get("/api/projects", (req, res) => {
+  res.json(projects);
+});
+
+app.get("/api/projects/:id", (req, res) => {
+  const project = projects.find((p) => p.id === Number(req.params.id));
+
+  if (!project) {
+    return res.status(404).json({ error: "Project not found" });
+  }
+
+  res.json(project);
+});
+
+app.post("/api/projects", (req, res) => {
+  const { title, stack } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: "title is required" });
+  }
+
+  const newProject = {
+    id: nextProjectId++,
+    title,
+    stack: stack || ""
+  };
+
+  projects.push(newProject);
+  res.status(201).json(newProject);
+});
+
+app.delete("/api/projects/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const before = projects.length;
+
+  projects = projects.filter((p) => p.id !== id);
+
+  if (projects.length === before) {
+    return res.status(404).json({ error: "Project not found" });
+  }
+
+  res.json({ message: "Project deleted", id });
+});
+
+app.post("/api/contact", (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({
+      error: "name, email and message are required"
+    });
+  }
+
+  const entry = {
+    id: nextMessageId++,
+    name,
+    email,
+    message,
+    receivedAt: new Date().toISOString()
+  };
+
+  messages.push(entry);
+
+  console.log("New contact message from", name);
+
+  res.status(201).json({
+    message: "Message received, thank you!",
+    entry
+  });
+});
+
+app.get("/api/messages", (req, res) => {
+  res.json(messages);
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+const PORT = 5001;
+
+app.listen(PORT, () => {
+  console.log(`Express API listening on http://localhost:${PORT}`);
+});
+
+
+
+
+
+output
+
+
+$ node server.js
+Express API listening on http://localhost:5001
+
+$ curl http://localhost:5001/api/projects
+[
+  {
+    "id": 1,
+    "title": "Library Management System",
+    "stack": "Java, MySQL"
+  },
+  {
+    "id": 2,
+    "title": "Weather App",
+    "stack": "HTML, CSS, JS, Fetch API"
+  },
+  {
+    "id": 3,
+    "title": "Result Portal",
+    "stack": "PHP, MySQL"
+  }
+]
+
+$ curl -X POST http://localhost:5001/api/projects \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Quiz App","stack":"React, Node"}'
+
+{
+  "id": 4,
+  "title": "Quiz App",
+  "stack": "React, Node"
+}
+
+$ curl -X POST http://localhost:5001/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Rahul Kumar","email":"rahul@example.com","message":"Hi, interested..."}'
+
+{
+  "message": "Message received, thank you!",
+  "entry": {
+    "id": 1,
+    "name": "Rahul Kumar",
+    "email": "rahul@example.com",
+    "message": "Hi, interested in collaborating on a project.",
+    "receivedAt": "2026-08-18T06:39:44.717Z"
+  }
+}
+
+
+$ curl http://localhost:5001/api/messages
+[
+  {
+    "id": 1,
+    "name": "Rahul Kumar",
+    "email": "rahul@example.com",
+    "message": "Hi, interested in collaborating on a project.",
+    "receivedAt": "2026-08-18T06:39:44.717Z"
+  }
+]
+
+$ curl -X DELETE http://localhost:5001/api/projects/2
+{
+  "message": "Project deleted",
+  "id": 2
+}
+
+$ curl -X POST http://localhost:5001/api/contact \
+  -H "Content-Type: application/json" -d '{"name":"Test"}'
+
+{
+  "error": "name, email and message are required"
+}
